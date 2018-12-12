@@ -3,21 +3,18 @@ package com.project.myung.boostcampproject
 import android.content.Context
 import android.support.v7.widget.RecyclerView
 import android.text.Html
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.item_movie.view.*
-import java.lang.Exception
-import android.support.v4.content.ContextCompat.startActivity
 import android.content.Intent
 import android.net.Uri
 
-
-abstract class MovieListAdapter(val context: Context, val movieList: ArrayList<MovieInfo>) :
+abstract class MovieListAdapter(private val context: Context, private val movieList: ArrayList<MovieInfo>) :
     RecyclerView.Adapter<ViewHolder>() {
 
+    //무한 스크롤 함수를 위한 함수
     abstract fun load()
 
     override fun getItemCount(): Int {
@@ -33,12 +30,13 @@ abstract class MovieListAdapter(val context: Context, val movieList: ArrayList<M
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-
+        //현재 위치가 아이템 갯수와 일치하다면 마지막 포인트로 인지하고 다음 데이터 로드
         if ((position >= itemCount - 1))
             load()
 
         holder.title.text = Html.fromHtml(movieList[position].movieName)
-        //holder.image.setImageDrawable(sList[position].icon)
+
+        //피카소 라이브러리를 이용한 url로 이미지 불러오기
         if (!movieList[position].icon.isEmpty()) {
             Picasso.get()
                 .load(movieList[position].icon)
@@ -50,16 +48,19 @@ abstract class MovieListAdapter(val context: Context, val movieList: ArrayList<M
         holder.date.text = movieList[position].date
         holder.actor.text = movieList[position].actor
         holder.director.text = movieList[position].director
+
+        //해당 아이템을 클릭하면 링크로 이동
         holder.itemView.setOnClickListener {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(movieList[position].link))
-            context.startActivity(intent)
+            if(!movieList[position].link.isEmpty()) {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(movieList[position].link))
+                context.startActivity(intent)
+            }
         }
 
     }
 }
 
 class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-    // Holds the TextView that will add each animal to
     val title = view.movie_title
     val rating = view.movie_rating
     val date = view.movie_date
