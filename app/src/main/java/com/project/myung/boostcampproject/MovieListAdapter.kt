@@ -37,7 +37,7 @@ abstract class MovieListAdapter(private val context: Context, private val movieL
         holder.title.text = Html.fromHtml(movieList[position].movieName)
 
         //피카소 라이브러리를 이용한 url로 이미지 불러오기
-        if (!movieList[position].icon.isEmpty()) {
+        if (movieList[position].icon.isNotEmpty()) {
             Picasso.get()
                 .load(movieList[position].icon)
                 .resize(220, 326)
@@ -46,12 +46,14 @@ abstract class MovieListAdapter(private val context: Context, private val movieL
         }
         holder.rating.rating = movieList[position].rating
         holder.date.text = movieList[position].date
-        holder.actor.text = movieList[position].actor
-        holder.director.text = movieList[position].director
+
+        holder.actor.text = movieList[position].actor.replace("|",",").let { if(it.isEmpty()) null else it.substring(0,it.length - 1) }
+
+        holder.director.text = movieList[position].director.replace("|",",").let { if(it.isEmpty()) null else it.substring(0,it.length - 1) }
 
         //해당 아이템을 클릭하면 링크로 이동
         holder.itemView.setOnClickListener {
-            if(!movieList[position].link.isEmpty()) {
+            if(movieList[position].link.isNotEmpty()) {
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(movieList[position].link))
                 context.startActivity(intent)
             }

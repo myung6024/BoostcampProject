@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         //검색 버튼이 눌리면 모두 초기화
         search_button.setOnClickListener {
-            if (!search_edit_frame.text.isEmpty()) {
+            if (search_edit_frame.text.isNotEmpty()) {
                 movieList.clear()
                 lastMovieLink = ""
                 startPosition = 1
