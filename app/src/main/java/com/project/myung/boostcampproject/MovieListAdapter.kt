@@ -10,8 +10,9 @@ import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.item_movie.view.*
 import android.content.Intent
 import android.net.Uri
+import android.util.DisplayMetrics
 
-abstract class MovieListAdapter(private val context: Context, private val movieList: ArrayList<MovieInfo>) :
+abstract class MovieListAdapter(private val context: Context, private val movieList: ArrayList<MovieModelItem>) :
     RecyclerView.Adapter<ViewHolder>() {
 
     //무한 스크롤 함수를 위한 함수
@@ -34,18 +35,24 @@ abstract class MovieListAdapter(private val context: Context, private val movieL
         if ((position >= itemCount - 1))
             load()
 
-        holder.title.text = Html.fromHtml(movieList[position].movieName)
+        holder.title.text = Html.fromHtml(movieList[position].title)
 
         //피카소 라이브러리를 이용한 url로 이미지 불러오기
-        if (movieList[position].icon.isNotEmpty()) {
+        //해상도 변화에 따라 이미지의 크기를 같게 하기 위하여 dp 크기를 픽셀로 변환하여 값 대입
+        if (movieList[position].image.isNotEmpty()) {
+            holder.image.visibility = View.VISIBLE
             Picasso.get()
-                .load(movieList[position].icon)
-                .resize(220, 326)
+                .load(movieList[position].image)
+                .placeholder(R.color.transparent)
+                .resize(convertDpToPixel(110f,context), convertDpToPixel(168f,context))
                 .centerCrop()
                 .into(holder.image)
+        }else{
+            holder.image.visibility = View.INVISIBLE
         }
-        holder.rating.rating = movieList[position].rating
-        holder.date.text = movieList[position].date
+
+        holder.rating.rating = (movieList[position].userRating.toFloat() / 2f)
+        holder.date.text = movieList[position].pubDate
 
         holder.actor.text = movieList[position].actor.replace("|",",").let { if(it.isEmpty()) null else it.substring(0,it.length - 1) }
 
@@ -59,6 +66,13 @@ abstract class MovieListAdapter(private val context: Context, private val movieL
             }
         }
 
+    }
+
+    /*dp를 픽셀로 변환해주는 함수*/
+    private fun convertDpToPixel(dp: Float, context: Context): Int {
+        val resources = context.resources
+        val metrics = resources.displayMetrics
+        return (dp * (metrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT)).toInt()
     }
 }
 

@@ -6,10 +6,10 @@ import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 
-fun provideMovieApi(): MovieAPI = Retrofit.Builder()
+fun provideMovieApi(baseURL: String): MovieAPI = Retrofit.Builder()
 
     // 통신할 서버의 주소를 입력합니다.
-    .baseUrl("https://openapi.naver.com/v1/")
+    .baseUrl(baseURL)
 
     // 네트워크 요청 로그를 표시해 줍니다.
     .client(provideOkHttpClient(provideLoggingInterceptor()))

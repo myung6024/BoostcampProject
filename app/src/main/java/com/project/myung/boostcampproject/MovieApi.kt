@@ -17,9 +17,9 @@ interface MovieAPI {
 
 }
 
-class MovieModel(val items: ArrayList<MovieModelItem>)
+data class MovieModel(val items: ArrayList<MovieModelItem>)
 
-class MovieModelItem(
+data class MovieModelItem(
     @field:SerializedName("title") val title: String,
     @field:SerializedName("link") val link: String,
     @field:SerializedName("image") val image: String,

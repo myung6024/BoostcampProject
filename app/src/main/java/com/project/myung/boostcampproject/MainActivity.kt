@@ -4,7 +4,6 @@ import android.content.Context
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
-import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
@@ -12,31 +11,20 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import kotlinx.android.synthetic.main.activity_main.*
-import com.victor.loading.book.BookLoading
 
-
-
-data class MovieInfo(
-    val movieName: String,
-    val rating: Float,
-    val date: String,
-    val director: String,
-    val actor: String,
-    val icon: String,
-    val link: String
-)
 
 class MainActivity : AppCompatActivity() {
-    private val api by lazy { provideMovieApi() }
+    private val movieApi by lazy { provideMovieApi("https://openapi.naver.com/v1/") }
     private val disposable = CompositeDisposable()
-    private val movieList = ArrayList<MovieInfo>()
-    private val displayInt = "15"
+    private val movieList = ArrayList<MovieModelItem>()
+    //몇개의 데이터를 표시할지
+    private val displayInt = "20"
     private val clientId = "2pWW9zVLX5zp0SpCoBXd"
     private val clientSecret = "nh0_3eHf4o"
     private val movieAdapter = object : MovieListAdapter(this, movieList) {
         override fun load() {
             if (canScroll) {
-                startPosition += 15
+                startPosition += displayInt.toInt()
                 getMovieData(nowQuery, startPosition.toString())
             }
         }
@@ -54,12 +42,10 @@ class MainActivity : AppCompatActivity() {
         //검색 버튼이 눌리면 모두 초기화
         search_button.setOnClickListener {
             if (search_edit_frame.text.isNotEmpty()) {
-                movieList.clear()
-                lastMovieLink = ""
-                startPosition = 1
-                canScroll = true
+                clearExData()
                 nowQuery = search_edit_frame.text.toString()
-                imm.hideSoftInputFromWindow(search_button.windowToken, 0);
+                //키보드 내림
+                imm.hideSoftInputFromWindow(search_button.windowToken, 0)
                 getMovieData(nowQuery, startPosition.toString())
             }else{
                 Toast.makeText(this@MainActivity, "검색어를 입력하셔야 합니다.", Toast.LENGTH_SHORT).show()
@@ -76,10 +62,17 @@ class MainActivity : AppCompatActivity() {
         disposable.clear()
     }
 
+    private fun clearExData(){
+        movieList.clear()
+        lastMovieLink = ""
+        startPosition = 1
+        canScroll = true
+    }
+
     //API에서 영화 데이터를 받아 리스트에 추가하는 함수
     private fun getMovieData(query: String, startPoint: String) {//검색어, 무한 스크롤을 위한 검색 포인트
         progressStart()
-        disposable.add(api.doGetMovieList(query, displayInt, startPoint, clientId, clientSecret)
+        disposable.add(movieApi.doGetMovieList(query, displayInt, startPoint, clientId, clientSecret)
             // REST API 를 통해 받은 응답에서 Result 값을 추출합니다.
             .flatMap {
                 Observable.just(it.items)
@@ -96,27 +89,15 @@ class MainActivity : AppCompatActivity() {
 
             // 옵서버블을 구독합니다.
             .subscribe({ data ->
-                //data사이즈 확인
+                //data 사이즈 확인
                 if (data.size != 0) {
                     //중복된 데이터를 불러온 것이 아닌지 검사
                     if (data.last().link == lastMovieLink) {
+                        //중복된 데이터를 불러왔으면 무한 스크롤 정지
                         canScroll = false
                     } else { //아니라면 해당 데이터를 리스트에 추가하고 갱신시킴
                         lastMovieLink = data.last().link
-                        data.map {
-                            Log.d("MyTag", it.image)
-                            movieList.add(
-                                MovieInfo(
-                                    it.title,
-                                    it.userRating.toFloat() / 2,
-                                    it.pubDate,
-                                    it.director,
-                                    it.actor,
-                                    it.image,
-                                    it.link
-                                )
-                            )
-                        }
+                        movieList.addAll(data)
                         movieAdapter.notifyDataSetChanged()
                     }
                 } else { //데이터가 0이면 결과 없음 출력
@@ -124,8 +105,6 @@ class MainActivity : AppCompatActivity() {
                     movieAdapter.notifyDataSetChanged()
                 }
 
-                // data 를 받아 처리합니다.
-                // 작업 중 오류가 발생하면 이 블록은 호출되지 않습니다.
                 progressStop()
                 disposable.clear()
 
@@ -147,11 +126,11 @@ class MainActivity : AppCompatActivity() {
         disposable.clear()
     }
 
-    fun progressStart(){
+    private fun progressStart(){
         rotateloading.visibility = View.VISIBLE
         rotateloading.start()
     }
-    fun progressStop(){
+    private fun progressStop(){
         rotateloading.stop()
         rotateloading.visibility = View.GONE
     }
